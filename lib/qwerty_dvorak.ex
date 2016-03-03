@@ -34,12 +34,24 @@ defmodule QwertyDvorak do
         end)
   end
 
-  def sixteen_processes(words, map) do
-    Enum.map(0..16, fn(i) ->
-      Task.async(fn -> IO.puts("Hello from #{i}") end)
-    end)
+  def make_index(file) do
+    {:ok, words} = File.read(file)
+    words = String.split(words, "\n")
+    for word <- words, into: %{}, do: {word, :y}
+  end
 
-    |> Enum.map(fn(t) -> Task.await(t) end)
+  def sixteen_processes(map) do
+    {:ok, file} = File.open("/usr/share/dict/words")
+    index = make_index("/usr/share/dict/words")
+    IO.binstream(file, :line)
+    |> Stream.filter(fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
+    |>  Stream.map(fn(word) ->
+          Task.async(fn -> to_dvorak(word, map) end)
+        end)
+
+    |> Stream.map(fn(t) -> Task.await(t) end)
+    |> Enum.filter
+    |> IO.inspect
   end
 
   def pmap(list, func) do
@@ -65,14 +77,13 @@ defmodule QwertyDvorak do
   end
 
   def get_words() do
-    {:ok, file} = File.read('/usr/share/dict/words')
+    {:ok, file} = File.read("/usr/share/dict/words")
     String.split(file, "\n")
+    |> Enum.filter(fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
   end
 
   def main(args) do
       words = get_words()
-
-      words = Enum.filter(words, fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
 
       q_to_d = %{
         "a" => "a",
@@ -99,8 +110,7 @@ defmodule QwertyDvorak do
         "y" => "f"
       }
 
-      words = []
-      #n_processes(words, q_to_d)
-      sixteen_processes(words, q_to_d)
+      n_processes(words, q_to_d)
+      #sixteen_processes(q_to_d)
   end
 end
