@@ -34,6 +34,14 @@ defmodule QwertyDvorak do
         end)
   end
 
+  def sixteen_processes(words, map) do
+    Enum.map(0..16, fn(i) ->
+      Task.async(fn -> IO.puts("Hello from #{i}") end)
+    end)
+
+    |> Enum.map(fn(t) -> Task.await(t) end)
+  end
+
   def pmap(list, func) do
     me = self
 
@@ -56,9 +64,15 @@ defmodule QwertyDvorak do
     main(nil)
   end
 
+  def get_words() do
+    {:ok, file} = File.read('/usr/share/dict/words')
+    String.split(file, "\n")
+  end
+
   def main(args) do
-      {:ok, file} = File.read('/usr/share/dict/words')
-      words = String.split(file, "\n")
+      words = get_words()
+
+      words = Enum.filter(words, fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
 
       q_to_d = %{
         "a" => "a",
@@ -85,6 +99,8 @@ defmodule QwertyDvorak do
         "y" => "f"
       }
 
-      n_processes(words, q_to_d)
+      words = []
+      #n_processes(words, q_to_d)
+      sixteen_processes(words, q_to_d)
   end
 end
