@@ -8,6 +8,7 @@ defmodule QwertyDvorak do
 
   def to_dvorak(word, map) do
     word
+    |> String.downcase
     |> String.split("")
     |> Enum.map(fn(c) -> map[c] end)
     |> Enum.join("")
@@ -17,21 +18,29 @@ defmodule QwertyDvorak do
     IO.inspect(s)
   end
 
-  def n_processes(words, map) do
+  def n_processes(words, map, index) do
     me = self
     words
-    |>  Enum.map(fn(elem) ->
+    |>  Stream.map(fn(elem) ->
           spawn(fn ->
-            send(me, {self, to_dvorak(elem, map)})
+            send(me, {self, elem, to_dvorak(elem, map)})
           end)
         end)
 
-    |>  Enum.map(fn(pid) ->
+    |>  Stream.map(fn(pid) ->
           receive do
-            {pid, result} ->
-              result
+            {pid, orig, dvorak} ->
+              {orig, dvorak}
           end
         end)
+    |>  Enum.filter(fn({orig, dvorak}) ->
+          case index[dvorak] do
+            :y -> true
+            _ -> false
+          end
+        end)
+
+    |> IO.inspect
   end
 
   def make_index(file) do
@@ -78,12 +87,15 @@ defmodule QwertyDvorak do
 
   def get_words() do
     {:ok, file} = File.read("/usr/share/dict/words")
-    String.split(file, "\n")
+    words = String.split(file, "\n")
     |> Enum.filter(fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
+
+    index = for word <- words, into: %{}, do: {word, :y}
+    {words, index}
   end
 
   def main(args) do
-      words = get_words()
+      {words, index} = get_words()
 
       q_to_d = %{
         "a" => "a",
@@ -110,7 +122,7 @@ defmodule QwertyDvorak do
         "y" => "f"
       }
 
-      n_processes(words, q_to_d)
+      n_processes(words, q_to_d, index)
       #sixteen_processes(q_to_d)
   end
 end
