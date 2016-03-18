@@ -1,10 +1,5 @@
 defmodule QwertyDvorak do
-  def measure(function) do
-    function
-    |> :timer.tc
-    |> elem(0)
-    |> Kernel./(1_000_000)
-  end
+  import ExProf.Macro
 
   def to_dvorak(word, map) do
     word
@@ -26,7 +21,6 @@ defmodule QwertyDvorak do
             send(me, {self, elem, to_dvorak(elem, map)})
           end)
         end)
-
     |>  Stream.map(fn(pid) ->
           receive do
             {pid, orig, dvorak} ->
@@ -39,7 +33,6 @@ defmodule QwertyDvorak do
             _ -> false
           end
         end)
-
     |> IO.inspect
   end
 
@@ -95,6 +88,7 @@ defmodule QwertyDvorak do
   end
 
   def main(args) do
+    #profile do
       {words, index} = get_words()
 
       q_to_d = %{
@@ -124,5 +118,6 @@ defmodule QwertyDvorak do
 
       n_processes(words, q_to_d, index)
       #sixteen_processes(q_to_d)
+    #end
   end
 end
