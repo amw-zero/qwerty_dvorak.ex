@@ -79,7 +79,6 @@ defmodule QwertyDvorak do
       }
 
       n_processes(words, q_to_d, index)
-      #sixteen_processes(q_to_d)
     #end
   end
 end
