@@ -35,45 +35,7 @@ defmodule QwertyDvorak do
         end)
     |> IO.inspect
   end
-
-  def make_index(file) do
-    {:ok, words} = File.read(file)
-    words = String.split(words, "\n")
-    for word <- words, into: %{}, do: {word, :y}
-  end
-
-  def sixteen_processes(map) do
-    {:ok, file} = File.open("/usr/share/dict/words")
-    index = make_index("/usr/share/dict/words")
-    IO.binstream(file, :line)
-    |> Stream.filter(fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
-    |>  Stream.map(fn(word) ->
-          Task.async(fn -> to_dvorak(word, map) end)
-        end)
-
-    |> Stream.map(fn(t) -> Task.await(t) end)
-    |> Enum.filter
-    |> IO.inspect
-  end
-
-  def pmap(list, func) do
-    me = self
-
-    list
-    |>  Enum.map(fn(elem) ->
-          spawn(fn ->
-            send(me, {self, func.(elem)})
-          end)
-        end)
-
-    |>  Enum.map(fn(pid) ->
-          receive do
-            {pid, result} ->
-              result
-          end
-        end)
-  end
-
+  
   def do_main() do
     main(nil)
   end
