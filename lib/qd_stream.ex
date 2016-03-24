@@ -76,21 +76,20 @@ defmodule QD do
 	end
 
 	def get_words() do
-		words = File.stream!("/usr/share/dict/words") |> Stream.run
+	    {:ok, file} = File.read("/usr/share/dict/words")
+	    words = String.split(file, "\n")
 	    index = for word <- words, into: %{}, do: {word, :y}
 
 	    # Use patterns for this
 		filtered_words = Stream.filter(words, fn line ->
 			!String.contains?(line, ["e", "E", "q", "Q", "w", "W", "z", "Z"])
 		end)
-	   	|> Enum.map(&(String.strip(&1)))
 
 	    {filtered_words, index}
 	end
 
 	def run do
-#		profile do
-		{words, index} = QwertyDvorak.get_words()
+		{words, index} = QD.get_words()
 		Enum.each(words, fn word ->
 			converted = replace(word)
 			if String.length(converted) > 0 do
@@ -100,10 +99,11 @@ defmodule QD do
 			 	end
 			end
 		end)
-#		end
 	end
 
 	def main(args) do
-		run
+		profile do
+			run
+		end
 	end
 end
