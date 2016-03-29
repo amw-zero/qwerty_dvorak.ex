@@ -101,9 +101,103 @@ defmodule QD do
 		end)
 	end
 
-	def main(args) do
-		profile do
-			run
+	def convert_word(word) do
+		String.codepoints(word)		
+		|> Enum.map(&convert_case/1)
+	end
+
+	def convert_case(letter) do
+		case letter do
+			"a" -> "a"
+			"A" -> "A"
+	        "b" -> "x"
+	        "B" -> "X"
+	        "c" -> "j"
+	        "C" -> "J"
+	        "d" -> "e"
+	        "D" -> "E"
+	        "f" -> "u"
+	        "F" -> "U"
+	        "g" -> "i"
+	        "G" -> "I"
+	        "h" -> "d"
+	        "H" -> "D"
+	        "i" -> "c"
+	        "I" -> "C"
+	        "j" -> "h"
+	        "J" -> "H"
+	        "k" -> "t"
+	        "K" -> "T"
+	        "l" -> "n"
+	        "L" -> "N"
+	        "m" -> "m"
+	        "M" -> "M"
+	        "n" -> "b"
+	        "N" -> "B"
+	        "o" -> "r"
+	        "O" -> "R"
+	        "p" -> "l"
+	        "P" -> "L"
+	        "r" -> "p"
+	        "R" -> "P"
+	        "s" -> "o"
+	        "S" -> "O"
+	        "t" -> "y"
+	        "T" -> "Y"
+	        "u" -> "g"
+	        "U" -> "G"
+	        "v" -> "k"
+	        "V" -> "K"
+	        "x" -> "q"
+	        "X" -> "Q"
+	        "y" -> "f"
+	        "Y" -> "F"
+	        "" -> ""
 		end
+	end
+
+	def open_file do
+		File.read!("/usr/share/dict/words")
+	end
+
+	def open_and_split_file do
+		String.split(File.read!("/usr/share/dict/words"), "\n")
+	end
+
+	def convert_words(words) do
+		Enum.each(words, fn word ->
+			unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
+				#IO.puts "#{word} -> #{convert_word(word)}"
+				#convert_word(word)
+				replace(word)
+			end
+		end)
+	end
+
+	def profile_parts do
+		{time, idk} = :timer.tc QD, :open_file, []
+		IO.puts "Time to open file: #{time}"
+
+		{time, idk} = :timer.tc QD, :open_and_split_file, []
+		IO.puts "Time to open and split file: #{time}"
+
+		{time, idk} = :timer.tc QD, :convert_case, ["a"]
+		IO.puts "Time to convert one letter: #{time}"
+
+		words = open_and_split_file
+		{time, idk} = :timer.tc QD, :convert_words, [words]
+		IO.puts "Time to convert words: #{time}"
+	end
+
+	def create_index(words) do
+	    for word <- words, into: %{}, do: {word, :y}	
+	end
+
+	def main(args) do
+		profile_parts
+
+		open_and_split_file
+		|> create_index
+		|> convert_and_check_words
 	end
 end
