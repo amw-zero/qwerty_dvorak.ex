@@ -167,37 +167,87 @@ defmodule QD do
 	def convert_words(words) do
 		Enum.each(words, fn word ->
 			unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
-				#IO.puts "#{word} -> #{convert_word(word)}"
-				#convert_word(word)
 				replace(word)
 			end
 		end)
 	end
 
+	def convert_words_with_case(words) do
+		Enum.each(words, fn word ->
+			unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
+				convert_word(word)
+			end
+		end)
+	end
+
+	def convert_and_check(words, index) do
+		Enum.each(words, fn word ->
+			unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
+				converted = replace(word)
+				case index[converted] do
+			 		:y -> {}#IO.puts "#{word} -> #{converted}"
+				 	_ -> 
+			 	end
+			end
+		end)
+	end
+
+	def convert_and_check_with_case(words, index) do
+		Enum.each(words, fn word ->
+			unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
+				converted = convert_word(word)
+				case index[converted] do
+			 		:y -> {}#IO.puts "#{word} -> #{converted}"
+				 	_ -> 
+			 	end
+			end
+		end)
+	end
+
 	def profile_parts do
-		{time, idk} = :timer.tc QD, :open_file, []
+		{time, _} = :timer.tc QD, :open_file, []
 		IO.puts "Time to open file: #{time}"
 
-		{time, idk} = :timer.tc QD, :open_and_split_file, []
+		{time, _} = :timer.tc QD, :open_and_split_file, []
 		IO.puts "Time to open and split file: #{time}"
 
-		{time, idk} = :timer.tc QD, :convert_case, ["a"]
+		{time, _} = :timer.tc QD, :convert_case, ["a"]
 		IO.puts "Time to convert one letter: #{time}"
 
 		words = open_and_split_file
-		{time, idk} = :timer.tc QD, :convert_words, [words]
+		{time, _} = :timer.tc QD, :convert_words, [words]
 		IO.puts "Time to convert words: #{time}"
+
+		{time, _} = :timer.tc QD, :convert_words_with_case, [words]
+		IO.puts "Time to convert words via case: #{time}"		
+
+		index = create_index(words)
+
+		{time, _} = :timer.tc QD, :convert_and_check, [words, index]
+		IO.puts "Time to convert and check words: #{time}"
+
+		{time, _} = :timer.tc QD, :run_all, []
+		IO.puts "Time to do the whole thing: #{time}"
 	end
 
 	def create_index(words) do
 	    for word <- words, into: %{}, do: {word, :y}	
 	end
 
-	def main(args) do
-		profile_parts
+	def profile_all do
+		profile do
+			run_all
+		end
+	end
 
-		open_and_split_file
-		|> create_index
-		|> convert_and_check_words
+	def run_all do
+		words = open_and_split_file
+		index = create_index(words)
+		convert_and_check(words, index)
+	end
+
+	def main(args) do
+		#run_all
+		profile_parts
 	end
 end
