@@ -1,84 +1,79 @@
 defmodule QwertyDvorak do
-  import ExProf.Macro
+  q_to_d = %{
+    "a" => "a",
+    "A" => "A",
+    "b" => "x",
+    "B" => "X",
+    "c" => "j",
+    "C" => "J",
+    "d" => "e",
+    "D" => "E",
+    "f" => "u",
+    "F" => "U",
+    "g" => "i",
+    "G" => "I",
+    "h" => "d",
+    "H" => "D",
+    "i" => "c",
+    "I" => "C",
+    "j" => "h",
+    "J" => "H",
+    "k" => "t",
+    "K" => "T",
+    "l" => "n",
+    "L" => "N",
+    "m" => "m",
+    "M" => "M",
+    "n" => "b",
+    "N" => "B",
+    "o" => "r",
+    "O" => "R",
+    "p" => "l",
+    "P" => "L",
+    "r" => "p",
+    "R" => "P",
+    "s" => "o",
+    "S" => "O",
+    "t" => "y",
+    "T" => "Y",
+    "u" => "g",
+    "U" => "G",
+    "v" => "k",
+    "V" => "K",
+    "x" => "q",
+    "X" => "Q",
+    "y" => "f",
+    "Y" => "F"
+  }
 
-  def to_dvorak(word, map) do
-    word
-    |> String.downcase
-    |> String.split("")
-    |> Enum.map(fn(c) -> map[c] end)
-    |> Enum.join("")
+  def convert(<<>>), do: <<>>
+  for {q, d} <- q_to_d do
+    def convert(unquote(q) <> rest), do: unquote(d) <> convert(rest)
   end
 
-  def print_str(s) do
-    IO.inspect(s)
+  def open_and_split_file do
+    String.split(File.read!("/usr/share/dict/words"), "\n")
   end
 
-  def n_processes(words, map, index) do
-    me = self
-    words
-    |>  Stream.map(fn(elem) ->
-          spawn(fn ->
-            send(me, {self, elem, to_dvorak(elem, map)})
-          end)
-        end)
-    |>  Stream.map(fn(pid) ->
-          receive do
-            {pid, orig, dvorak} ->
-              {orig, dvorak}
-          end
-        end)
-    |>  Enum.filter(fn({orig, dvorak}) ->
-          case index[dvorak] do
-            :y -> true
-            _ -> false
-          end
-        end)
-    |> IO.inspect
-  end
-  
-  def do_main() do
-    main(nil)
+  def create_index(words) do
+      for word <- words, into: %{}, do: {word, :y}  
   end
 
-  def get_words() do
-    {:ok, file} = File.read("/usr/share/dict/words")
-    words = String.split(file, "\n")
-    |> Enum.filter(fn(word) -> !String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) end)
-
-    index = for word <- words, into: %{}, do: {word, :y}
-    {words, index}
+  def convert_and_check(words, index) do
+    Enum.each(words, fn word ->
+      unless String.contains?(word, ["e", "E", "q", "Q", "w", "W", "z", "Z"]) do
+        converted = convert(word)
+        case index[converted] do
+          :y -> IO.puts "#{word} -> #{converted}"
+          _ -> 
+        end
+      end
+    end)
   end
 
   def main(args) do
-    #profile do
-      {words, index} = get_words()
-
-      q_to_d = %{
-        "a" => "a",
-        "b" => "x",
-        "c" => "j",
-        "d" => "e",
-        "f" => "u",
-        "g" => "i",
-        "h" => "d",
-        "i" => "c",
-        "j" => "h",
-        "k" => "t",
-        "l" => "n",
-        "m" => "m",
-        "n" => "b",
-        "o" => "r",
-        "p" => "l",
-        "r" => "p",
-        "s" => "o",
-        "t" => "y",
-        "u" => "g",
-        "v" => "k",
-        "x" => "q",
-        "y" => "f"
-      }
-
-      n_processes(words, q_to_d, index)
-    #end
+    words = open_and_split_file
+    index = create_index(words)
+    convert_and_check(words, index)   
   end
 end

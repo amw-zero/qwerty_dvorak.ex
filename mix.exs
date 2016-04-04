@@ -5,7 +5,7 @@ defmodule QwertyDvorak.Mixfile do
     [app: :qwerty_dvorak,
      version: "0.0.1",
      elixir: "~> 1.2",
-     escript: [main_module: QD],
+     escript: [main_module: QwertyDvorak],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps]

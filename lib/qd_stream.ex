@@ -46,16 +46,12 @@ defmodule QD do
 		"X" => "Q",
 		"y" => "f",
 		"Y" => "F"
-	 }
+	}
 
 	def convert(<<>>), do: <<>>
 	for {q, d} <- q_to_d do
 		def convert(unquote(q) <> rest), do: unquote(d) <> convert(rest)
 	end
-
-	# Qwerty -> Dvorak conversion
-
-		
 
 	def get_words() do
 	    {:ok, file} = File.read("/usr/share/dict/words")
@@ -68,19 +64,6 @@ defmodule QD do
 		end)
 
 	    {filtered_words, index}
-	end
-
-	def run do
-		{words, index} = QD.get_words()
-		Enum.each(words, fn word ->
-			converted = convert(word)
-			if String.length(converted) > 0 do
-			 	case index[converted] do
-			 		:y -> IO.puts "#{word} -> #{converted}"
-				 	_ -> 
-			 	end
-			end
-		end)
 	end
 
 	def convert_word(word) do
